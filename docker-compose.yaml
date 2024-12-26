@@ -1,0 +1,55 @@
+networks:
+  wp_network:
+    name: wp_network
+    driver: bridge
+
+services:
+  # MySQL Service
+  mysqldb:
+    image: mysql:5.7
+    platform: linux/x86_64
+    container_name: mysqldb_container
+    volumes:
+      - ./mysql:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=1234
+      - MYSQL_DATABASE=wordpress_db
+      - MYSQL_USER=wordpress
+      - MYSQL_PASSWORD=wordpress
+    networks:
+      - wp_network
+    restart: always
+  # WordPress Service
+  wordpress:
+    depends_on:
+      - mysqldb
+    image: wordpress
+    platform: linux/x86_64
+    container_name: wordpress_container
+    volumes:
+      - ./wordpress:/var/www/html
+    environment:
+      - WORDPRESS_DB_HOST=mysqldb:3306
+      - WORDPRESS_DB_USER=wordpress
+      - WORDPRESS_DB_PASSWORD=wordpress
+      - WORDPRESS_DB_NAME=wordpress_db
+    networks:
+      - wp_network
+    ports:
+      - "8888:80"
+    restart: always
+  # PhpMyAdmin Service
+  phpmyadmin:
+    depends_on:
+      - mysqldb
+    image: phpmyadmin/phpmyadmin
+    platform: linux/x86_64
+    container_name: phpmyadmin_container
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=mysqldb
+    networks:
+      - wp_network
+    ports:
+      - "8899:80"
+    restart: always
